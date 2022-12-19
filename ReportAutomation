@@ -1,0 +1,62 @@
+function pullData() {
+  let core_sub1data = [];
+  let core_sub1 = SpreadsheetApp.openById('xxxxx');
+  let core_sub1month_sheetVal = core_sub1.getSheetByName('November').getDataRange().getValues();
+  core_sub1data = core_sub1data.concat(core_sub1month_sheetVal);
+
+  let core_sub2data = [];
+  let core_sub2 = SpreadsheetApp.openById('xxx');
+  let core_sub2month_sheetVal = core_sub2.getSheetByName('December').getDataRange().getValues();
+  core_sub2data = core_sub2data.concat(core_sub2month_sheetVal);
+  
+  let core_whole_data = [];
+  let core_raw = SpreadsheetApp.openById('xxx').getSheetByName('RAW');
+  
+  core_raw.clear();
+  core_whole_data = core_whole_data.concat(core_sub1data, core_sub2data);
+
+  core_raw.getRange(1, 1, core_whole_data.length, core_whole_data[0].length).setValues(core_whole_data);
+
+  core_raw.sort(1, false);
+  core_raw.getRange("A:AV").removeDuplicates().trimWhitespace();
+  core_raw.getRange("D:D").setNumberFormat("0");
+  core_raw.getRange("AV:AV").setNumberFormat("0");
+}
+
+function create_template() {
+  let report_date = SpreadsheetApp.openById('xxxxx').getSheetByName('ReportingPage').getRange("B2").getDisplayValue(),
+    doc_title = "Weekly Report: " + report_date;
+  
+  let template_id = "xxx", folder_id = "xxx", file = DriveApp.getFileById(template_id), folder = DriveApp.getFolderById(folder_id)
+  let new_file = file.makeCopy(doc_title);
+  
+  folder.addFile(file)
+
+  let new_file_url = new_file.getUrl(),
+  url1 = "https://docs.google.com/spreadsheets/d/xxx/", url2 = "https://docs.google.com/spreadsheets/d/xxx/",
+  url3 = "https://docs.google.com/spreadsheets/d/xxx/", url4 = "https://docs.google.com/spreadsheets/d/xxx/"
+
+  let body = DocumentApp.openById(file.getId()).getBody();
+  
+  body.replaceText("{report_week}", report_date);
+
+  MailApp.sendEmail({
+      to: "...@xxx.com, ...@xxx.com, ...@xxx.com, ...@xxx.com",
+      subject: "Weekly Report: " + report_date + " is ready!",
+      htmlBody: " \n\
+      <p>Hi Team,</p> \n\
+      <p><span style='color:#3498db'>The weekly report for " + report_date + " is ready!</span><br /> \n\
+      <strong>Please click the <a href= '" + new_file_url + "'>link</a>&nbsp;here to check the created doc.</strong>&nbsp;Also, please remember to go to &quot;Tools&quot; &gt; &quot;Linked objects&quot;, and click &quot;Update All&quot; to make sure that the graphs and tables are all up-to-date.&nbsp;</p> \n\
+      <p>To verify the metrics, feel free to go to the original data/sheets:</p> \n\
+      <ul> \n\
+        <li><a href=" + url1 + ">xxxxx</a></li> \n\
+        <li><a href=" + url2 + ">xxxxx</a></li> \n\
+        <li><a href=" + url3 + ">xxxxx</a></li> \n\
+        <li><a href=" + url4 + ">xxxxx</a></li> \n\
+      </ul> \n\
+      <p>Please let me know if you see any inconsistent data or if you would like to provide any suggestions or feedback, thanks!</p> \n\
+      <p>&nbsp;</p> \n\
+      <p>Cheers,&nbsp;</p> \n\
+      <p>Alex</p> \n\
+      "})
+}
